@@ -1,3 +1,8 @@
+mod cli;
+mod errors;
+
+use cli::App;
+
 fn main() {
-    println!("Hello, world!");
+    let _app = App::parse_from_cli();
 }

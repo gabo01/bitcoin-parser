@@ -4,12 +4,10 @@ use std::fmt;
 #[derive(Debug)]
 pub struct Error;
 
-impl fmt::Display for Error {    
-    fn fmt(&self, _: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> { 
-        todo!() 
+impl fmt::Display for Error {
+    fn fmt(&self, _: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        todo!()
     }
 }
 
-impl ErrorTrait for Error {
-    
-}
+impl ErrorTrait for Error {}

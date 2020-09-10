@@ -1,0 +1,29 @@
+name: btparser
+about: btparser is an application for parsing and analysis of data contained in the bitcoin blockchain
+version: "0.1.0"
+author: Gabriel Dos Ramos <dosramosgabriel@gmail.com>
+settings:
+    - SubcommandRequiredElseHelp
+    - ArgRequiredElseHelp
+args:
+    - backtrace:
+        help: Prints the complete error backtrace if an error is found
+        short: b
+        long: backtrace
+subcommands:
+    - dump:
+        about: Performs the parsing of the blockchain from the blk.dat files and generates an alternative format representation
+        version: "0.1.0"
+        args:
+            - file:
+                help: Specifies the block file to process
+                required: true
+                short: f
+                takes_value: true
+                value_name: FILE
+            - target:
+                help: Specifies the location of the dump format
+                required: true
+                short: t
+                takes_value: true
+                value_name: PATH

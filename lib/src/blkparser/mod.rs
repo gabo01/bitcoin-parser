@@ -21,12 +21,11 @@ pub const MAGIC_BYTES: u32 = 0xf9beb4d9;
 
 pub struct BitcoinParser<'a> {
     file: &'a Path,
-    target: &'a Path,
 }
 
 impl<'a> BitcoinParser<'a> {
-    pub fn new(file: &'a Path, target: &'a Path) -> Self {
-        Self { file, target }
+    pub fn new(file: &'a Path) -> Self {
+        Self { file }
     }
 
     fn read_raw_blocks<'buf>(buffer: &'buf [u8]) -> impl Iterator<Item = Cursor<'buf>> {

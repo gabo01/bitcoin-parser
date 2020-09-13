@@ -1,14 +1,14 @@
-use super::transactions::Transaction;
 use crate::types::{BitcoinHash as BHash, BlockTarget};
+use crate::Transaction as TransactionTrait;
 use crate::TransactionBlock;
 
-pub struct Block {
+pub struct Block<T: TransactionTrait> {
     header: BlockHeader,
-    transactions: Vec<Transaction>,
+    transactions: Vec<T>,
 }
 
-impl Block {
-    pub(crate) fn new(header: BlockHeader, transactions: Vec<Transaction>) -> Self {
+impl<T: TransactionTrait> Block<T> {
+    pub(crate) fn new(header: BlockHeader, transactions: Vec<T>) -> Self {
         Self {
             header,
             transactions,
@@ -16,8 +16,8 @@ impl Block {
     }
 }
 
-impl TransactionBlock for Block {
-    type Transaction = Transaction;
+impl<T: TransactionTrait> TransactionBlock for Block<T> {
+    type Transaction = T;
 }
 
 pub(crate) struct BlockHeader {

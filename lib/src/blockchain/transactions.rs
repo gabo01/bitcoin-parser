@@ -45,6 +45,10 @@ impl Input {
             witness,
         }
     }
+
+    pub fn assign_witness(&mut self, witness: BScript) {
+        self.witness = Some(witness);
+    }
 }
 
 pub struct Utxo {

@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+#[cfg(feature = "parser")]
+pub mod blkparser;
 pub mod blockchain;
 pub mod types;
 
@@ -14,3 +16,8 @@ pub trait TransactionBlock {
 }
 
 pub trait Transaction {}
+
+#[cfg(feature = "parser")]
+pub trait Parser<T: TransactionBlock> {
+    fn parse(&self) -> blockchain::BlockChain<T>;
+}

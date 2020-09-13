@@ -1,3 +1,5 @@
+use std::iter::FromIterator;
+
 pub mod block;
 pub mod script;
 pub mod transactions;
@@ -11,5 +13,13 @@ pub struct BlockChain<T: TransactionBlock> {
 impl<T: TransactionBlock> BlockChain<T> {
     pub fn new() -> Self {
         Self { blocks: vec![] }
+    }
+}
+
+impl<T: TransactionBlock> FromIterator<T> for BlockChain<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        Self {
+            blocks: iter.into_iter().collect(),
+        }
     }
 }

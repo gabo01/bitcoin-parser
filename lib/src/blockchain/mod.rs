@@ -1,3 +1,6 @@
+#[cfg(feature = "writer")]
+use serde::{Deserialize, Serialize};
+
 use std::iter::FromIterator;
 
 pub mod block;
@@ -6,6 +9,7 @@ pub mod transactions;
 
 use crate::TransactionBlock;
 
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct BlockChain<T: TransactionBlock> {
     blocks: Vec<T>,
 }

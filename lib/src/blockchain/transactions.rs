@@ -1,7 +1,11 @@
+#[cfg(feature = "writer")]
+use serde::{Deserialize, Serialize};
+
 use super::script::BitcoinScript as BScript;
 use crate::types::BitcoinHash;
 use crate::Transaction as TransactionTrait;
 
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct Transaction {
     version: u32,
     inputs: Vec<Input>,
@@ -29,7 +33,9 @@ impl Transaction {
 
 impl TransactionTrait for Transaction {}
 
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct Input {
+    #[cfg_attr(feature = "writer", serde(flatten))]
     utxo: Utxo,
     signature: BScript,
     sequence: u32,
@@ -51,6 +57,7 @@ impl Input {
     }
 }
 
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct Utxo {
     txid: BitcoinHash,
     vout: u32,
@@ -62,6 +69,7 @@ impl Utxo {
     }
 }
 
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct Output {
     value: u64,
     pubkey: BScript,

@@ -1,6 +1,8 @@
 use arrayref::array_ref;
 use byteorder::ByteOrder;
 use core::ops::Deref;
+#[cfg(feature = "writer")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
 use sha2::Sha256;
 
@@ -33,6 +35,21 @@ impl Deref for VarInt {
     }
 }
 
+#[cfg(feature = "writer")]
+impl Serialize for VarInt {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "writer")]
+impl<'de> Deserialize<'de> for VarInt {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let data = <u64 as Deserialize<'de>>::deserialize(deserializer)?;
+        Ok(Self::new(data))
+    }
+}
+
 pub struct BlockTarget([u8; 4]);
 
 impl BlockTarget {
@@ -47,7 +64,38 @@ impl<'a> From<&'a [u8]> for BlockTarget {
     }
 }
 
+#[cfg(feature = "writer")]
+impl Serialize for BlockTarget {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let hex_string = format!("{:x?}", self.0);
+        hex_string.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "writer")]
+impl<'de> Deserialize<'de> for BlockTarget {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let data = <[u8; 4] as Deserialize<'de>>::deserialize(deserializer)?;
+        Ok(Self::new(data))
+    }
+}
+
 pub struct BitcoinHash([u8; 32]);
+
+#[cfg(feature = "writer")]
+impl Serialize for BitcoinHash {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        hex::encode(self.0).serialize(serializer)
+    }
+}
+
+#[cfg(feature = "writer")]
+impl<'de> Deserialize<'de> for BitcoinHash {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let data = <[u8; 32] as Deserialize<'de>>::deserialize(deserializer)?;
+        Ok(Self::new(data))
+    }
+}
 
 impl BitcoinHash {
     pub fn new(data: [u8; 32]) -> Self {

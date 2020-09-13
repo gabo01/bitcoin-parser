@@ -1,5 +1,7 @@
 use arrayref::array_ref;
 use byteorder::{LittleEndian, ReadBytesExt};
+#[cfg(feature = "writer")]
+use serde::{Deserialize, Serialize};
 
 use super::cursor::Cursor;
 use super::helpers::read_var_int;
@@ -11,9 +13,11 @@ use crate::types::BitcoinHash as BHash;
 use crate::types::BlockTarget;
 use crate::TransactionBlock;
 
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct SerialBlock {
     size: u32,
     hash: BHash,
+    #[cfg_attr(feature = "writer", serde(flatten))]
     contents: Block<SerialTransaction>,
 }
 

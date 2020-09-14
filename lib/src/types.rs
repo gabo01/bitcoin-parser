@@ -2,9 +2,10 @@ use arrayref::array_ref;
 use byteorder::ByteOrder;
 use core::ops::Deref;
 #[cfg(feature = "writer")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
 use sha2::Sha256;
+use std::convert::TryFrom;
 
 #[derive(Copy, Clone)]
 pub struct VarInt(u64);
@@ -74,8 +75,10 @@ impl Serialize for BlockTarget {
 #[cfg(feature = "writer")]
 impl<'de> Deserialize<'de> for BlockTarget {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let data = <[u8; 4] as Deserialize<'de>>::deserialize(deserializer)?;
-        Ok(Self::new(data))
+        let hex_string = <&str as Deserialize<'de>>::deserialize(deserializer)?;
+        let bytes = hex::decode(hex_string).map_err(de::Error::custom)?;
+        let data = <&[u8; 4]>::try_from(&bytes[..]).map_err(de::Error::custom)?;
+        Ok(Self::new(data.to_owned()))
     }
 }
 
@@ -91,8 +94,10 @@ impl Serialize for BitcoinHash {
 #[cfg(feature = "writer")]
 impl<'de> Deserialize<'de> for BitcoinHash {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let data = <[u8; 32] as Deserialize<'de>>::deserialize(deserializer)?;
-        Ok(Self::new(data))
+        let hex_string = <&str as Deserialize<'de>>::deserialize(deserializer)?;
+        let bytes = hex::decode(hex_string).map_err(de::Error::custom)?;
+        let data = <&[u8; 32]>::try_from(&bytes[..]).map_err(de::Error::custom)?;
+        Ok(Self::new(data.to_owned()))
     }
 }
 

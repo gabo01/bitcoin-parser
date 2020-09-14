@@ -1,5 +1,5 @@
 #[cfg(feature = "writer")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 pub struct BitcoinScript {
     contents: Vec<u8>,
@@ -20,7 +20,9 @@ impl Serialize for BitcoinScript {
 
 #[cfg(feature = "writer")]
 impl<'de> Deserialize<'de> for BitcoinScript {
-    fn deserialize<D: Deserializer<'de>>(_deserializer: D) -> Result<Self, D::Error> {
-        todo!()
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let hex_string = <&str as Deserialize<'de>>::deserialize(deserializer)?;
+        let bytes = hex::decode(hex_string).map_err(de::Error::custom)?;
+        Ok(Self::new(bytes))
     }
 }

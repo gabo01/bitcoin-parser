@@ -30,6 +30,7 @@ pub(crate) struct BlockHeader {
     version: u32,
     previous: BHash,
     txroot: BHash,
+    #[cfg_attr(feature = "writer", serde(flatten))]
     consensus: MiningInfo,
 }
 

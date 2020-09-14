@@ -67,8 +67,7 @@ impl<'a> From<&'a [u8]> for BlockTarget {
 #[cfg(feature = "writer")]
 impl Serialize for BlockTarget {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let hex_string = format!("{:x?}", self.0);
-        hex_string.serialize(serializer)
+        hex::encode(self.0).serialize(serializer)
     }
 }
 

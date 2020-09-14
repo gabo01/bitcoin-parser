@@ -22,25 +22,27 @@ pub struct SerialBlock {
 }
 
 impl SerialBlock {
-    pub fn from_raw_data<'a>(cursor: Cursor<'a>) -> Self {
+    pub fn from_raw_data<'a>(mut cursor: Cursor<'a>) -> Self {
         let size = cursor.size() as u32;
-        let hash = BHash::hash(cursor.get_ref());
+        let raw_header = cursor.bytes_to_cursor(80);
+        let hash = BHash::hash_header(raw_header.get_ref());
+        let header = SerialHeader::build_header(raw_header);
+        let transactions = Self::read_transactions(cursor);
 
         Self {
             size,
             hash,
-            contents: Self::build_block(cursor),
+            contents: Block::new(header, transactions),
         }
     }
 
-    fn build_block(mut cursor: Cursor<'_>) -> Block<SerialTransaction> {
-        let header = SerialHeader::build_header(cursor.bytes_to_cursor(80));
+    fn read_transactions(mut cursor: Cursor<'_>) -> Vec<SerialTransaction> {
         let txcount = read_var_int(&mut cursor);
         let mut transactions = vec![];
         for _ in 0..*txcount {
             transactions.push(SerialTransaction::from_raw_data(&mut cursor));
         }
-        Block::new(header, transactions)
+        transactions
     }
 }
 

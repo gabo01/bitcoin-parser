@@ -5,6 +5,8 @@ use std::iter::FromIterator;
 
 pub mod block;
 pub mod script;
+#[cfg(feature = "writer")]
+mod serde_custom;
 pub mod transactions;
 
 use crate::TransactionBlock;

@@ -1,6 +1,7 @@
 #[cfg(feature = "writer")]
 use serde::{Deserialize, Serialize};
 
+use super::serde_custom;
 use crate::types::{BitcoinHash as BHash, BlockTarget};
 use crate::Transaction as TransactionTrait;
 use crate::TransactionBlock;
@@ -27,6 +28,7 @@ impl<T: TransactionTrait> TransactionBlock for Block<T> {
 
 #[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub(crate) struct BlockHeader {
+    #[cfg_attr(feature = "writer", serde(with = "serde_custom::version"))]
     version: u32,
     previous: BHash,
     txroot: BHash,

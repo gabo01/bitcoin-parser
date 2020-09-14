@@ -56,7 +56,8 @@ impl SerialHeader {
             .read_u32::<LittleEndian>()
             .expect("Version has to exist for a valid cursor");
         let prev_hash = BHash::new(array_ref!(cursor.read_bytes(32), 0, 32).to_owned());
-        let merkle_root = BHash::new(array_ref!(cursor.read_bytes(32), 0, 32).to_owned());
+        let merkle_root =
+            BHash::from_little_endian(array_ref!(cursor.read_bytes(32), 0, 32).to_owned());
         let time = cursor
             .read_u32::<LittleEndian>()
             .expect("Time has to exist for a valid cursor");

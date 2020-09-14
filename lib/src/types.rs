@@ -102,8 +102,13 @@ impl BitcoinHash {
         Self(data)
     }
 
-    pub fn hash(digest: &[u8]) -> Self {
-        let mut hash = Sha256::digest(digest);
+    pub fn from_little_endian(mut data: [u8; 32]) -> Self {
+        data.reverse();
+        Self(data)
+    }
+
+    pub fn hash_header(digest: &[u8]) -> Self {
+        let mut hash = Sha256::digest(&Sha256::digest(digest)[..]);
         hash.reverse();
         Self::new(array_ref!(&hash[..], 0, 32).to_owned())
     }

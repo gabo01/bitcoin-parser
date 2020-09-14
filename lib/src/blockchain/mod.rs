@@ -27,3 +27,27 @@ impl<T: TransactionBlock> FromIterator<T> for BlockChain<T> {
         }
     }
 }
+
+impl<T: TransactionBlock> IntoIterator for BlockChain<T> {
+    type Item = <Vec<T> as IntoIterator>::Item;
+    type IntoIter = <Vec<T> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
+        self.blocks.into_iter()
+    }
+}
+
+impl<'a, T: TransactionBlock> IntoIterator for &'a BlockChain<T> {
+    type Item = <&'a Vec<T> as IntoIterator>::Item;
+    type IntoIter = <&'a Vec<T> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
+        self.blocks.iter()
+    }
+}
+
+impl<'a, T: TransactionBlock> IntoIterator for &'a mut BlockChain<T> {
+    type Item = <&'a mut Vec<T> as IntoIterator>::Item;
+    type IntoIter = <&'a mut Vec<T> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
+        self.blocks.iter_mut()
+    }
+}

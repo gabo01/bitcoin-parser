@@ -4,12 +4,13 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use serde::{Deserialize, Serialize};
 
 use super::cursor::Cursor;
-use super::helpers::{read_var_int, read_var_int_marker};
+use super::helpers::read_var_int;
 use crate::blockchain::script::BitcoinScript as BScript;
 use crate::blockchain::transactions::Input;
 use crate::blockchain::transactions::Output;
 use crate::blockchain::transactions::Transaction;
 use crate::blockchain::transactions::Utxo;
+use crate::blockchain::transactions::Witness;
 use crate::types::BitcoinHash as BHash;
 use crate::types::VarInt;
 use crate::Transaction as TransactionTrait;
@@ -28,11 +29,13 @@ impl SerialTransaction {
         let version = cursor
             .read_u32::<LittleEndian>()
             .expect("Transaction version has to exist for valid transaction");
-        let marker = cursor.read_bytes(1)[0];
-        if marker == 0x00 {
+        let marker = read_var_int(cursor);
+        if *marker == 0x00 {
+            let flag = read_var_int(cursor);
+            assert_eq!(*flag, 0x01, "flag not set correctly");
             return Self::from_segwit_raw_data(version, cursor);
         }
-        let txin = read_var_int_marker(marker, cursor);
+        let txin = marker;
         let inputs = Self::read_inputs(*txin, cursor);
         let txout = read_var_int(cursor);
         let outputs = Self::read_outputs(*txout, cursor);
@@ -52,9 +55,8 @@ impl SerialTransaction {
         let txout = read_var_int(cursor);
         let outputs = Self::read_outputs(*txout, cursor);
         for input in &mut inputs {
-            let witness_size = read_var_int(cursor);
-            if *witness_size > 0 {
-                let witness = BScript::new(cursor.read_bytes(*witness_size as usize).to_owned());
+            let witness = Self::read_witness(cursor);
+            if let Some(witness) = witness {
                 input.assign_witness(witness);
             }
         }
@@ -104,6 +106,20 @@ impl SerialTransaction {
             outputs.push(output);
         }
         outputs
+    }
+
+    fn read_witness(cursor: &mut Cursor) -> Option<Witness> {
+        let witness_stack_size = read_var_int(cursor);
+        if *witness_stack_size == 0x00 {
+            return None;
+        }
+        let mut items = vec![];
+        for __ in 0..*witness_stack_size {
+            let item_length = read_var_int(cursor);
+            let item = cursor.read_bytes(*item_length as usize).to_owned();
+            items.push(item)
+        }
+        Some(Witness::new(items))
     }
 }
 

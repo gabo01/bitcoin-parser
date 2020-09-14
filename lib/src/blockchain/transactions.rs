@@ -39,11 +39,11 @@ pub struct Input {
     utxo: Utxo,
     signature: BScript,
     sequence: u32,
-    witness: Option<BScript>,
+    witness: Option<Witness>,
 }
 
 impl Input {
-    pub fn new(utxo: Utxo, signature: BScript, sequence: u32, witness: Option<BScript>) -> Self {
+    pub fn new(utxo: Utxo, signature: BScript, sequence: u32, witness: Option<Witness>) -> Self {
         Self {
             utxo,
             signature,
@@ -52,7 +52,7 @@ impl Input {
         }
     }
 
-    pub fn assign_witness(&mut self, witness: BScript) {
+    pub fn assign_witness(&mut self, witness: Witness) {
         self.witness = Some(witness);
     }
 }
@@ -78,5 +78,16 @@ pub struct Output {
 impl Output {
     pub fn new(value: u64, pubkey: BScript) -> Self {
         Self { value, pubkey }
+    }
+}
+
+#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
+pub struct Witness {
+    items: Vec<Vec<u8>>,
+}
+
+impl Witness {
+    pub fn new(items: Vec<Vec<u8>>) -> Self {
+        Self { items }
     }
 }

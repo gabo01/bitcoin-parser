@@ -12,7 +12,7 @@ args:
         long: backtrace
 subcommands:
     - dump:
-        about: Performs the parsing of the blockchain from the blk.dat files and generates an alternative format representation
+        about: Performs the parsing of the blockchain from the blk.dat file specified and generates a json representation
         version: "0.1.0"
         args:
             - file:
@@ -22,7 +22,7 @@ subcommands:
                 takes_value: true
                 value_name: FILE
             - target:
-                help: Specifies the location of the dump format
+                help: Specifies the directory to write the dump format
                 required: true
                 short: t
                 takes_value: true

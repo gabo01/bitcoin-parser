@@ -1,6 +1,16 @@
 use clap::ArgMatches;
+use serde_json as json;
 use std::env::current_dir;
+use std::fs::File;
+use std::io::Write;
 use std::path::PathBuf;
+
+use btlib::blkparser::BitcoinParser;
+use btlib::blkparser::SerialBlock;
+use btlib::blockchain::BlockChain;
+use btlib::Parser;
+
+pub const BLK_BUFFER: usize = 400 * 1024 * 1024;
 
 #[derive(Debug)]
 pub struct Dump {
@@ -33,6 +43,27 @@ impl Dump {
     }
 
     pub fn run(&self) {
-        unimplemented!()
+        let parser = BitcoinParser::new(&self.file);
+        let blockchain = parser.parse();
+        self.write(blockchain);
+    }
+
+    fn write(&self, blockchain: BlockChain<SerialBlock>) {
+        let mut buffer = Vec::with_capacity(BLK_BUFFER);
+        json::to_writer(&mut buffer, &blockchain).expect("Write to in memory buffer cannot fail");
+        self.save(&buffer);
+    }
+
+    fn save(&self, data: &[u8]) {
+        let filename = self.file.file_stem().expect("file name must exist");
+        let mut filepath = PathBuf::from(&self.target);
+        filepath.push(format!(
+            "{}.json",
+            filename.to_str().expect("unable to convert to string")
+        ));
+        File::create(filepath)
+            .map(|mut file| file.write(data))
+            .expect("unable to create file")
+            .expect("unable to write into file");
     }
 }

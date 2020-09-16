@@ -1,6 +1,7 @@
 use clap::ArgMatches;
 use serde_json as json;
 use std::env::current_dir;
+use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -8,7 +9,7 @@ use std::path::PathBuf;
 use btlib::blkparser::BitcoinParser;
 use btlib::blkparser::SerialBlock;
 use btlib::blockchain::BlockChain;
-use btlib::Parser;
+use btlib::parser::Parser;
 
 pub const BLK_BUFFER: usize = 400 * 1024 * 1024;
 
@@ -45,7 +46,17 @@ impl Dump {
     pub fn run(&self) {
         let parser = BitcoinParser::new(&self.file);
         let blockchain = parser.parse();
-        self.write(blockchain);
+        match blockchain {
+            Ok(data) => self.write(data),
+            Err(err) => {
+                println!("The following error was raised during the parsing: {}", err);
+                let mut cause = err.source();
+                while let Some(source) = cause {
+                    println!("Error source: {}", source);
+                    cause = source.source();
+                }
+            }
+        }
     }
 
     fn write(&self, blockchain: BlockChain<SerialBlock>) {

@@ -3,6 +3,8 @@
 #[cfg(feature = "parser")]
 pub mod blkparser;
 pub mod blockchain;
+#[cfg(feature = "parser")]
+pub mod parser;
 pub mod types;
 
 pub mod byteorder {
@@ -16,8 +18,3 @@ pub trait TransactionBlock {
 }
 
 pub trait Transaction {}
-
-#[cfg(feature = "parser")]
-pub trait Parser<T: TransactionBlock> {
-    fn parse(&self) -> blockchain::BlockChain<T>;
-}

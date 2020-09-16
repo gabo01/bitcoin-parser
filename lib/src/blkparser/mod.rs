@@ -5,7 +5,8 @@ use std::io::Read;
 use std::path::Path;
 
 use crate::blockchain::BlockChain;
-use crate::Parser;
+use crate::parser::Parser;
+use crate::parser::{ParseError, ParseErrorKind};
 
 mod block;
 mod cursor;
@@ -28,7 +29,7 @@ impl<'a> BitcoinParser<'a> {
         Self { file }
     }
 
-    fn read_raw_blocks<'buf>(buffer: &'buf [u8]) -> impl Iterator<Item = Cursor<'buf>> {
+    fn read_raw_blocks<'buf>(buffer: &'buf [u8]) -> impl Iterator<Item = io::Result<Cursor<'buf>>> {
         BlockIterator::new(Cursor::new(buffer))
     }
 
@@ -41,11 +42,15 @@ impl<'a> BitcoinParser<'a> {
 }
 
 impl<'a> Parser<SerialBlock> for BitcoinParser<'a> {
-    fn parse(&self) -> BlockChain<SerialBlock> {
-        let buffer = self.read_file_contents().expect("unable to read file");
-        Self::read_raw_blocks(&buffer)
-            .map(|block| SerialBlock::from_raw_data(block))
-            .collect::<BlockChain<SerialBlock>>()
+    fn parse(&self) -> Result<BlockChain<SerialBlock>, ParseError> {
+        let buffer = self.read_file_contents()?;
+        Ok(Self::read_raw_blocks(&buffer)
+            .map(|block| {
+                block
+                    .map_err(|err| ParseError::new(ParseErrorKind::ReadError, Some(Box::new(err))))
+                    .and_then(|data| SerialBlock::from_raw_data(data).map_err(From::from))
+            })
+            .collect::<Result<BlockChain<SerialBlock>, _>>()?)
     }
 }
 
@@ -60,30 +65,24 @@ impl<'a> BlockIterator<'a> {
 }
 
 impl<'a> Iterator for BlockIterator<'a> {
-    type Item = Cursor<'a>;
+    type Item = io::Result<Cursor<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let read = self.buffer.read_u32::<BigEndian>();
-        match read {
-            Ok(magic_bytes) => {
-                if magic_bytes == MAGIC_BYTES {
-                    let size = self
-                        .buffer
-                        .read_u32::<LittleEndian>()
-                        .expect("Size has to exist for a valid blk file");
-                    Some(self.buffer.bytes_to_cursor(size as usize))
-                } else {
-                    None
-                }
-            }
-            Err(err) => {
-                assert_eq!(
-                    err.kind(),
-                    io::ErrorKind::UnexpectedEof,
-                    "The only valid error is end of file in case of no more blocks"
-                );
-                None
-            }
+        match self.buffer.read_u32::<BigEndian>() {
+            Ok(delimiter) if delimiter == MAGIC_BYTES => Some(
+                self.buffer
+                    .read_u32::<LittleEndian>()
+                    .and_then(|size| self.buffer.bytes_to_cursor(size as usize)),
+            ),
+            Ok(delimiter) => Some(Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    "Expected to find the magic bytes: {} but found instead {}",
+                    MAGIC_BYTES, delimiter
+                ),
+            ))),
+            Err(err) if err.kind() == io::ErrorKind::UnexpectedEof => None,
+            Err(err) => Some(Err(err)),
         }
     }
 }

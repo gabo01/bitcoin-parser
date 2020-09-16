@@ -1,3 +1,4 @@
+use std::io;
 use std::io::Cursor as IOCursor;
 use std::io::Read;
 
@@ -12,15 +13,25 @@ impl<'a> Cursor<'a> {
         }
     }
 
-    pub fn bytes_to_cursor(&mut self, bytes: usize) -> Cursor<'a> {
-        Cursor::new(self.read_bytes(bytes))
+    pub fn bytes_to_cursor(&mut self, bytes: usize) -> io::Result<Cursor<'a>> {
+        Ok(Cursor::new(self.read_bytes(bytes)?))
     }
 
-    pub fn read_bytes(&mut self, bytes: usize) -> &'a [u8] {
-        let slice = &(self.data.get_ref()
-            [self.data.position() as usize..self.data.position() as usize + bytes]);
+    pub fn read_bytes(&mut self, bytes: usize) -> io::Result<&'a [u8]> {
+        let end_pos = self.data.position() as usize + bytes;
+        if end_pos > self.get_ref().len() {
+            return Err(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                format!(
+                    "Asked for {} bytes of data while the cursor only has {} bytes left",
+                    bytes,
+                    self.get_ref().len() as u64 - self.data.position()
+                ),
+            ));
+        }
+        let slice = &(self.data.get_ref()[self.data.position() as usize..end_pos]);
         self.data.set_position(self.data.position() + bytes as u64);
-        slice
+        Ok(slice)
     }
 
     pub fn size(&self) -> usize {

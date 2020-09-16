@@ -9,6 +9,8 @@ use super::transaction::SerialTransaction;
 use crate::blockchain::block::Block;
 use crate::blockchain::block::BlockHeader;
 use crate::blockchain::block::MiningInfo;
+use crate::parser::{BlockError, BlockErrorKind};
+use crate::parser::{HeaderError, HeaderErrorKind};
 use crate::types::BitcoinHash as BHash;
 use crate::types::BlockTarget;
 use crate::TransactionBlock;
@@ -22,27 +24,30 @@ pub struct SerialBlock {
 }
 
 impl SerialBlock {
-    pub fn from_raw_data<'a>(mut cursor: Cursor<'a>) -> Self {
+    pub fn from_raw_data<'a>(mut cursor: Cursor<'a>) -> Result<Self, BlockError> {
         let size = cursor.size() as u32;
-        let raw_header = cursor.bytes_to_cursor(80);
+        let raw_header = cursor
+            .bytes_to_cursor(80)
+            .map_err(|err| BlockError::new(BlockErrorKind::ReadError, Some(Box::new(err))))?;
         let hash = BHash::hash_header(raw_header.get_ref());
-        let header = SerialHeader::build_header(raw_header);
-        let transactions = Self::read_transactions(cursor);
+        let header = SerialHeader::build_header(raw_header)?;
+        let transactions = Self::read_transactions(cursor)?;
 
-        Self {
+        Ok(Self {
             size,
             hash,
             contents: Block::new(header, transactions),
-        }
+        })
     }
 
-    fn read_transactions(mut cursor: Cursor<'_>) -> Vec<SerialTransaction> {
-        let txcount = read_var_int(&mut cursor);
+    fn read_transactions(mut cursor: Cursor<'_>) -> Result<Vec<SerialTransaction>, BlockError> {
+        let txcount = read_var_int(&mut cursor)
+            .map_err(|err| BlockError::new(BlockErrorKind::ReadError, Some(Box::new(err))))?;
         let mut transactions = vec![];
         for _ in 0..*txcount {
-            transactions.push(SerialTransaction::from_raw_data(&mut cursor));
+            transactions.push(SerialTransaction::from_raw_data(&mut cursor)?);
         }
-        transactions
+        Ok(transactions)
     }
 }
 
@@ -53,27 +58,42 @@ impl TransactionBlock for SerialBlock {
 struct SerialHeader;
 
 impl SerialHeader {
-    fn build_header(mut cursor: Cursor<'_>) -> BlockHeader {
+    fn build_header(mut cursor: Cursor<'_>) -> Result<BlockHeader, HeaderError> {
         let version = cursor
             .read_u32::<LittleEndian>()
-            .expect("Version has to exist for a valid cursor");
-        let prev_hash = BHash::new(array_ref!(cursor.read_bytes(32), 0, 32).to_owned());
-        let merkle_root =
-            BHash::from_little_endian(array_ref!(cursor.read_bytes(32), 0, 32).to_owned());
+            .map_err(|err| HeaderError::new(HeaderErrorKind::VersionError, err))?;
+        let prev_hash = Self::build_hash(&mut cursor)?;
+        let merkle_root = Self::build_merkle_root(&mut cursor)?;
         let time = cursor
             .read_u32::<LittleEndian>()
-            .expect("Time has to exist for a valid cursor");
-        let bits = cursor.read_bytes(4);
+            .map_err(|err| HeaderError::new(HeaderErrorKind::TimeError, err))?;
+        let bits = cursor
+            .read_bytes(4)
+            .map_err(|err| HeaderError::new(HeaderErrorKind::BitsError, err))?;
         let nonce = cursor
             .read_u32::<LittleEndian>()
-            .expect("Nonce has to exist for a valid cursor");
+            .map_err(|err| HeaderError::new(HeaderErrorKind::NonceError, err))?;
 
-        BlockHeader::new(
+        Ok(BlockHeader::new(
             version,
             prev_hash,
             merkle_root,
             MiningInfo::new(time, BlockTarget::from(bits), nonce),
-        )
+        ))
+    }
+
+    fn build_hash(cursor: &mut Cursor<'_>) -> Result<BHash, HeaderError> {
+        let data = cursor
+            .read_bytes(32)
+            .map_err(|err| HeaderError::new(HeaderErrorKind::HashError, err))?;
+        Ok(BHash::new(array_ref!(data, 0, 32).to_owned()))
+    }
+
+    fn build_merkle_root(cursor: &mut Cursor<'_>) -> Result<BHash, HeaderError> {
+        let data = cursor
+            .read_bytes(32)
+            .map_err(|err| HeaderError::new(HeaderErrorKind::RootError, err))?;
+        Ok(BHash::new(array_ref!(data, 0, 32).to_owned()))
     }
 
     fn build_hash_array(slice: &[u8]) -> [u8; 32] {

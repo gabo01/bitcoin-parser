@@ -18,6 +18,12 @@ pub struct BlockChain<T: TransactionBlock> {
 
 impl<T: TransactionBlock> BlockChain<T> {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl<T: TransactionBlock> Default for BlockChain<T> {
+    fn default() -> Self {
         Self { blocks: vec![] }
     }
 }

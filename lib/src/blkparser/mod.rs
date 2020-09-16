@@ -29,7 +29,7 @@ impl<'a> BitcoinParser<'a> {
         Self { file }
     }
 
-    fn read_raw_blocks<'buf>(buffer: &'buf [u8]) -> impl Iterator<Item = io::Result<Cursor<'buf>>> {
+    fn read_raw_blocks(buffer: &[u8]) -> impl Iterator<Item = io::Result<Cursor<'_>>> {
         BlockIterator::new(Cursor::new(buffer))
     }
 

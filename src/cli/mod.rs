@@ -38,7 +38,7 @@ impl Operation {
     fn from_matches(matches: &ArgMatches) -> Result<Self, Error> {
         match matches.subcommand() {
             ("dump", Some(sb_matches)) => Ok(Self::Dump(ops::Dump::from_matches(sb_matches))),
-            (_, None) | _ => unreachable!(), // subcommand specification is required from a restricted subset in interface.yml
+            _ => unreachable!(), // subcommand specification is required from a restricted subset in interface.yml
         }
     }
 

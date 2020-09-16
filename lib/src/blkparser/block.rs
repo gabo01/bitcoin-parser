@@ -24,7 +24,7 @@ pub struct SerialBlock {
 }
 
 impl SerialBlock {
-    pub fn from_raw_data<'a>(mut cursor: Cursor<'a>) -> Result<Self, BlockError> {
+    pub fn from_raw_data(mut cursor: Cursor<'_>) -> Result<Self, BlockError> {
         let size = cursor.size() as u32;
         let raw_header = cursor
             .bytes_to_cursor(80)

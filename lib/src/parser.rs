@@ -1,5 +1,6 @@
 use std::error::Error as StdError;
 use std::io;
+use std::path::Path;
 use thiserror::Error;
 
 use crate::blockchain::BlockChain;
@@ -12,7 +13,7 @@ macro_rules! err_bound {
 }
 
 pub trait Parser<T: TransactionBlock> {
-    fn parse(&self) -> Result<BlockChain<T>, ParseError>;
+    fn parse<P: AsRef<Path>>(&mut self, file: P) -> Result<BlockChain<T>, ParseError>;
 }
 
 #[derive(Debug, Error)]

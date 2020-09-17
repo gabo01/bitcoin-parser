@@ -20,30 +20,36 @@ pub use transaction::SerialTransaction;
 pub const BLOCK_FILE_SIZE: u64 = 128 * 1024 * 1024;
 pub const MAGIC_BYTES: u32 = 0xf9beb4d9;
 
-pub struct BitcoinParser<'a> {
-    file: &'a Path,
+#[derive(Default)]
+pub struct BitcoinParser {
+    blkbuffer: Vec<u8>,
 }
 
-impl<'a> BitcoinParser<'a> {
-    pub fn new(file: &'a Path) -> Self {
-        Self { file }
+impl BitcoinParser {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     fn read_raw_blocks(buffer: &[u8]) -> impl Iterator<Item = io::Result<Cursor<'_>>> {
         BlockIterator::new(Cursor::new(buffer))
     }
 
-    fn read_file_contents(&self) -> Result<Vec<u8>, io::Error> {
-        let mut buffer = Vec::with_capacity(BLOCK_FILE_SIZE as usize);
-        let mut file = File::open(self.file)?;
-        file.read_to_end(&mut buffer)?;
-        Ok(buffer)
+    fn read_file_contents<P: AsRef<Path>>(&mut self, file: P) -> Result<&[u8], io::Error> {
+        if self.blkbuffer.capacity() == 0 {
+            self.blkbuffer = Vec::with_capacity(BLOCK_FILE_SIZE as usize);
+        }
+        if !self.blkbuffer.is_empty() {
+            self.blkbuffer.clear();
+        }
+        let mut file = File::open(file)?;
+        file.read_to_end(&mut self.blkbuffer)?;
+        Ok(&self.blkbuffer)
     }
 }
 
-impl<'a> Parser<SerialBlock> for BitcoinParser<'a> {
-    fn parse(&self) -> Result<BlockChain<SerialBlock>, ParseError> {
-        let buffer = self.read_file_contents()?;
+impl Parser<SerialBlock> for BitcoinParser {
+    fn parse<P: AsRef<Path>>(&mut self, file: P) -> Result<BlockChain<SerialBlock>, ParseError> {
+        let buffer = self.read_file_contents(file)?;
         Ok(Self::read_raw_blocks(&buffer)
             .map(|block| {
                 block

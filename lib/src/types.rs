@@ -84,23 +84,6 @@ impl<'de> Deserialize<'de> for BlockTarget {
 
 pub struct BitcoinHash([u8; 32]);
 
-#[cfg(feature = "writer")]
-impl Serialize for BitcoinHash {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        hex::encode(self.0).serialize(serializer)
-    }
-}
-
-#[cfg(feature = "writer")]
-impl<'de> Deserialize<'de> for BitcoinHash {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let hex_string = <&str as Deserialize<'de>>::deserialize(deserializer)?;
-        let bytes = hex::decode(hex_string).map_err(de::Error::custom)?;
-        let data = <&[u8; 32]>::try_from(&bytes[..]).map_err(de::Error::custom)?;
-        Ok(Self::new(data.to_owned()))
-    }
-}
-
 impl BitcoinHash {
     pub fn new(data: [u8; 32]) -> Self {
         Self(data)
@@ -115,6 +98,23 @@ impl BitcoinHash {
         let mut hash = Sha256::digest(&Sha256::digest(digest)[..]);
         hash.reverse();
         Self::new(array_ref!(&hash[..], 0, 32).to_owned())
+    }
+}
+
+#[cfg(feature = "writer")]
+impl Serialize for BitcoinHash {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        hex::encode(self.0).serialize(serializer)
+    }
+}
+
+#[cfg(feature = "writer")]
+impl<'de> Deserialize<'de> for BitcoinHash {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let hex_string = <&str as Deserialize<'de>>::deserialize(deserializer)?;
+        let bytes = hex::decode(hex_string).map_err(de::Error::custom)?;
+        let data = <&[u8; 32]>::try_from(&bytes[..]).map_err(de::Error::custom)?;
+        Ok(Self::new(data.to_owned()))
     }
 }
 

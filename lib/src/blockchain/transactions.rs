@@ -90,4 +90,8 @@ impl Witness {
     pub fn new(items: Vec<Vec<u8>>) -> Self {
         Self { items }
     }
+
+    pub fn count(&self) -> usize {
+        self.items.len()
+    }
 }

@@ -28,6 +28,12 @@ impl<T: TransactionBlock> Default for BlockChain<T> {
     }
 }
 
+impl<T: TransactionBlock> From<Vec<T>> for BlockChain<T> {
+    fn from(blocks: Vec<T>) -> Self {
+        Self { blocks }
+    }
+}
+
 impl<T: TransactionBlock> FromIterator<T> for BlockChain<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         Self {

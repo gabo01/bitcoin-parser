@@ -12,6 +12,11 @@ macro_rules! err_bound {
     };
 }
 
+#[cfg(feature = "parallel")]
+pub trait ParallelParser<T: TransactionBlock> {
+    fn parse<P: AsRef<Path>>(&mut self, file: P) -> Result<BlockChain<T>, ParseError>;
+}
+
 pub trait Parser<T: TransactionBlock> {
     fn parse<P: AsRef<Path>>(&mut self, file: P) -> Result<BlockChain<T>, ParseError>;
 }

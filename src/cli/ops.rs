@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use btlib::blkparser::BitcoinParser;
 use btlib::blockchain::BlockChain;
-use btlib::parser::Parser;
+use btlib::parser::ParallelParser;
 use btlib::TransactionBlock;
 
 pub const BLK_BUFFER: usize = 400 * 1024 * 1024;

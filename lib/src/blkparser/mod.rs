@@ -1,10 +1,14 @@
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 use std::fs::File;
 use std::io;
 use std::io::Read;
 use std::path::Path;
 
 use crate::blockchain::BlockChain;
+#[cfg(feature = "parallel")]
+use crate::parser::ParallelParser;
 use crate::parser::Parser;
 use crate::parser::{ParseError, ParseErrorKind};
 
@@ -57,6 +61,23 @@ impl Parser<SerialBlock> for BitcoinParser {
                     .and_then(|data| SerialBlock::from_raw_data(data).map_err(From::from))
             })
             .collect::<Result<BlockChain<SerialBlock>, _>>()?)
+    }
+}
+
+#[cfg(feature = "parallel")]
+impl ParallelParser<SerialBlock> for BitcoinParser {
+    fn parse<P: AsRef<Path>>(&mut self, file: P) -> Result<BlockChain<SerialBlock>, ParseError> {
+        let buffer = self.read_file_contents(file)?;
+        Ok(Self::read_raw_blocks(&buffer)
+            .par_bridge()
+            .into_par_iter()
+            .map(|block| {
+                block
+                    .map_err(|err| ParseError::new(ParseErrorKind::ReadError, Some(Box::new(err))))
+                    .and_then(|data| SerialBlock::from_raw_data(data).map_err(From::from))
+            })
+            .collect::<Result<Vec<SerialBlock>, _>>()?
+            .into())
     }
 }
 

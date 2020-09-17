@@ -41,8 +41,8 @@ impl SerialBlock {
     }
 
     fn read_transactions(mut cursor: Cursor<'_>) -> Result<Vec<SerialTransaction>, BlockError> {
-        let txcount = read_var_int(&mut cursor)
-            .map_err(|err| BlockError::new(BlockErrorKind::ReadError, Some(Box::new(err))))?;
+        let txcount =
+            read_var_int(&mut cursor).map_err(|err| BlockError::new(BlockErrorKind::ReadError, Some(Box::new(err))))?;
         let mut transactions = vec![];
         for _ in 0..*txcount {
             transactions.push(SerialTransaction::from_raw_data(&mut cursor)?);

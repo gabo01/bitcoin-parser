@@ -132,8 +132,7 @@ impl<'a, 'b: 'a> TxParser<'a, 'b> {
 
     fn parse_bytes(&mut self, bytes: usize) -> Result<&'b [u8], TxError> {
         let read = self.cursor.read_bytes(bytes);
-        let bytes =
-            read.map_err(|err| TxError::new(TxErrorKind::ReadError, Some(Box::new(err))))?;
+        let bytes = read.map_err(|err| TxError::new(TxErrorKind::ReadError, Some(Box::new(err))))?;
         Ok(bytes)
     }
 
@@ -149,8 +148,7 @@ impl<'a, 'b: 'a> TxParser<'a, 'b> {
     }
 
     fn parse_var_int(&mut self) -> Result<VarInt, TxError> {
-        Ok(read_var_int(self.cursor)
-            .map_err(|err| TxError::new(TxErrorKind::ReadError, Some(Box::new(err))))?)
+        Ok(read_var_int(self.cursor).map_err(|err| TxError::new(TxErrorKind::ReadError, Some(Box::new(err))))?)
     }
 
     fn parse_var_int_hash(&mut self) -> Result<VarInt, TxError> {

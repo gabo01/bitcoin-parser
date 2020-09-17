@@ -15,10 +15,7 @@ pub struct Block<T: TransactionTrait> {
 
 impl<T: TransactionTrait> Block<T> {
     pub(crate) fn new(header: BlockHeader, transactions: Vec<T>) -> Self {
-        Self {
-            header,
-            transactions,
-        }
+        Self { header, transactions }
     }
 }
 

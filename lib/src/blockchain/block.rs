@@ -1,6 +1,7 @@
 #[cfg(feature = "writer")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "writer")]
 use super::serde_custom;
 use crate::types::{BitcoinHash as BHash, BlockTarget};
 use crate::Transaction as TransactionTrait;

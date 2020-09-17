@@ -1,5 +1,5 @@
 #[cfg(feature = "writer")]
-use serde::{Deserialize, Serialize};
+use serde::{de, ser::SerializeSeq, Deserialize, Deserializer, Serialize, Serializer};
 
 use super::script::BitcoinScript as BScript;
 use crate::types::BitcoinHash;
@@ -81,7 +81,6 @@ impl Output {
     }
 }
 
-#[cfg_attr(feature = "writer", derive(Serialize, Deserialize))]
 pub struct Witness {
     items: Vec<Vec<u8>>,
 }
@@ -93,5 +92,51 @@ impl Witness {
 
     pub fn count(&self) -> usize {
         self.items.len()
+    }
+}
+
+impl IntoIterator for Witness {
+    type Item = <Vec<Vec<u8>> as IntoIterator>::Item;
+    type IntoIter = <Vec<Vec<u8>> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
+        self.items.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Witness {
+    type Item = <&'a Vec<Vec<u8>> as IntoIterator>::Item;
+    type IntoIter = <&'a Vec<Vec<u8>> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
+        (&self.items).into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Witness {
+    type Item = <&'a mut Vec<Vec<u8>> as IntoIterator>::Item;
+    type IntoIter = <&'a mut Vec<Vec<u8>> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
+        (&mut self.items).into_iter()
+    }
+}
+
+#[cfg(feature = "writer")]
+impl Serialize for Witness {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut seq = serializer.serialize_seq(Some(self.count()))?;
+        for item in self {
+            seq.serialize_element(&hex::encode(item))?;
+        }
+        seq.end()
+    }
+}
+
+#[cfg(feature = "writer")]
+impl<'de> Deserialize<'de> for Witness {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Witness, D::Error> {
+        let witness_items = <Vec<&str> as Deserialize<'de>>::deserialize(deserializer)?
+            .into_iter()
+            .map(|hex_string| hex::decode(hex_string).map_err(de::Error::custom))
+            .collect::<Result<Vec<Vec<u8>>, _>>()?;
+        Ok(Witness::new(witness_items))
     }
 }

@@ -17,10 +17,18 @@ subcommands:
         args:
             - file:
                 help: Specifies the block file to process
-                required: true
+                required_unless: dir
+                conflicts_with: dir
                 short: f
                 takes_value: true
                 value_name: FILE
+            - dir:
+                help: Specifies a directory with the block files to process
+                required_unless: file
+                conflicts_with: file
+                short: d
+                takes_value: true
+                value_name: DIR
             - target:
                 help: Specifies the directory to write the dump format
                 required: true

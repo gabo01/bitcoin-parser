@@ -38,6 +38,10 @@ impl<'a> Cursor<'a> {
         self.data.get_ref().len()
     }
 
+    pub fn position(&self) -> usize {
+        self.data.position() as usize
+    }
+
     pub fn get_ref(&self) -> &[u8] {
         self.data.get_ref()
     }

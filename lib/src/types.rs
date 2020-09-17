@@ -117,3 +117,29 @@ impl BitcoinHash {
         Self::new(array_ref!(&hash[..], 0, 32).to_owned())
     }
 }
+
+pub struct BitcoinHashBuilder {
+    contents: Vec<u8>,
+}
+
+impl BitcoinHashBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add_digest(&mut self, data: &[u8]) {
+        self.contents.extend(data)
+    }
+
+    pub fn into_hash(self) -> BitcoinHash {
+        BitcoinHash::hash_header(&self.contents)
+    }
+}
+
+impl Default for BitcoinHashBuilder {
+    fn default() -> Self {
+        Self {
+            contents: Vec::with_capacity(768),
+        }
+    }
+}

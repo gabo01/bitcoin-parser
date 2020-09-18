@@ -33,7 +33,7 @@ cargo build --release
 ## Features
 
 - [x] Struct model for the blockchain
-- [ ] Parser for blk.dat files
+- [x] Parser for blk.dat files
 - [ ] Transaction graph construction
 - [ ] Address graph construction
 - [ ] Script analysis

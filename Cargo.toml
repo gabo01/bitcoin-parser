@@ -21,3 +21,4 @@ debug = true
 [dependencies]
 btlib = {package = "bplib", path = "./lib", features = ["parser", "writer", "parallel", "json"]}
 clap = {version = "2.33.3", features = ["yaml"]}
+anyhow = "1.0"

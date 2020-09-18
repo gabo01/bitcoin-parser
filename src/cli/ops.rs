@@ -1,6 +1,7 @@
+use anyhow::Context;
+use anyhow::Result;
 use clap::ArgMatches;
 use std::env::current_dir;
-use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
@@ -27,21 +28,21 @@ impl Dump {
 
     fn get_path(matches: &ArgMatches) -> (bool, PathBuf) {
         let folder = matches.is_present("dir");
-        let path;
-        if folder {
-            path = Self::get_required_path(matches, "dir");
-        } else {
-            path = Self::get_required_path(matches, "file");
-        }
-        (folder, path)
+        (
+            folder,
+            if folder {
+                Self::get_required_path(matches, "dir")
+            } else {
+                Self::get_required_path(matches, "file")
+            },
+        )
     }
 
     fn get_required_path(matches: &ArgMatches, path: &str) -> PathBuf {
-        let path = PathBuf::from(
-            matches
-                .value_of(path)
-                .expect("Value is required in configuration present at interface.yml"),
-        );
+        let path_value = matches
+            .value_of(path)
+            .expect("Value is required in configuration present at interface.yml");
+        let path = PathBuf::from(path_value);
 
         if !path.is_absolute() {
             let mut curr_dir = current_dir().expect("Unable to retrieve the current directory");
@@ -52,41 +53,15 @@ impl Dump {
         }
     }
 
-    pub fn run(&self) {
-        if !self.folder {
-            self.run_file();
-            return;
-        }
-        let mut parser = BitcoinParser::default();
-        let mut save = JsonWriter::new(&self.target);
-        fs::read_dir(&self.path)
-            .expect("Unable to read folder")
-            .filter_map(Result::ok)
-            .filter(|entry| entry.path().is_file())
-            .for_each(|entry| {
-                let path = entry.path();
-                let blockchain = parser.parse(&path);
-                match blockchain {
-                    Ok(data) => {
-                        let filename = Self::get_file_save_path(&path);
-                        if let Err(err) = save.save(data, filename) {
-                            Self::report_error(err, path);
-                        }
-                    }
-                    Err(err) => Self::report_error(err, path),
-                }
-            })
-    }
-
-    fn run_file(&self) {
-        let mut parser = BitcoinParser::default();
-        let path = Self::get_file_save_path(&self.path);
-        let mut save = JsonWriter::new(&self.target);
-        match parser.parse(&self.path) {
-            Ok(blockchain) => save
-                .save(blockchain, path)
-                .expect("Unable to save parsed contents to disk"),
-            Err(err) => Self::report_error(err, path),
+    pub fn run(&self) -> Result<()> {
+        if self.folder {
+            let mut runner = FolderRunner::new(&self.path, &self.target);
+            runner.run()
+        } else {
+            let mut parser = BitcoinParser::default();
+            let mut writer = JsonWriter::new(&self.target);
+            let mut runner = FileRunnerRef::new(&self.path, &mut parser, &mut writer);
+            runner.run()
         }
     }
 
@@ -97,17 +72,55 @@ impl Dump {
             filename.to_str().expect("unable to convert to string")
         ))
     }
+}
 
-    fn report_error<E: Error + 'static, P: AsRef<Path>>(err: E, file: P) {
-        println!(
-            "Found error {} while parsing or saving the blockchain file {}",
-            err,
-            file.as_ref().display()
-        );
-        let mut cause = err.source();
-        while let Some(source) = cause {
-            println!("Previous error caused by {}", source);
-            cause = source.source();
-        }
+struct FolderRunner<'a> {
+    path: &'a Path,
+    target: &'a Path,
+}
+
+impl<'a> FolderRunner<'a> {
+    fn new(path: &'a Path, target: &'a Path) -> Self {
+        Self { path, target }
+    }
+
+    fn run(&mut self) -> Result<()> {
+        let mut parser = BitcoinParser::default();
+        let mut writer = JsonWriter::new(&self.target);
+        fs::read_dir(&self.path)
+            .context("Unable to read the given folder")?
+            .filter_map(Result::ok)
+            .filter(|entry| entry.path().is_file())
+            .map(|entry| {
+                let path = entry.path();
+                let mut runner = FileRunnerRef::new(&path, &mut parser, &mut writer);
+                runner.run()
+            })
+            .collect::<Result<()>>()?;
+        Ok(())
+    }
+}
+
+struct FileRunnerRef<'b, 'a: 'b, 'c: 'b> {
+    path: &'a Path,
+    parser: &'b mut BitcoinParser,
+    writer: &'b mut JsonWriter<'c>,
+}
+
+impl<'b, 'a, 'c> FileRunnerRef<'b, 'a, 'c> {
+    fn new(path: &'a Path, parser: &'b mut BitcoinParser, writer: &'b mut JsonWriter<'c>) -> Self {
+        Self { path, parser, writer }
+    }
+
+    fn run(&mut self) -> Result<()> {
+        let path = Dump::get_file_save_path(&self.path);
+        let blockchain = self
+            .parser
+            .parse(&self.path)
+            .context("Unable to parse the blk file contents")?;
+        self.writer
+            .save(blockchain, path)
+            .context("Unable to save parsed contents")?;
+        Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{load_yaml, App as CApp, ArgMatches};
 
 use crate::errors::Error;
@@ -24,8 +25,8 @@ impl App {
         })
     }
 
-    pub fn run(&self) {
-        self.operation.run();
+    pub fn run(&self) -> Result<()> {
+        self.operation.run()
     }
 }
 
@@ -42,7 +43,7 @@ impl Operation {
         }
     }
 
-    fn run(&self) {
+    fn run(&self) -> Result<()> {
         match *self {
             Operation::Dump(ref op) => op.run(),
         }

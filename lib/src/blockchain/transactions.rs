@@ -107,7 +107,7 @@ impl<'a> IntoIterator for &'a Witness {
     type Item = <&'a Vec<Vec<u8>> as IntoIterator>::Item;
     type IntoIter = <&'a Vec<Vec<u8>> as IntoIterator>::IntoIter;
     fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
-        (&self.items).into_iter()
+        self.items.iter()
     }
 }
 
@@ -115,7 +115,7 @@ impl<'a> IntoIterator for &'a mut Witness {
     type Item = <&'a mut Vec<Vec<u8>> as IntoIterator>::Item;
     type IntoIter = <&'a mut Vec<Vec<u8>> as IntoIterator>::IntoIter;
     fn into_iter(self) -> <Self as std::iter::IntoIterator>::IntoIter {
-        (&mut self.items).into_iter()
+        self.items.iter_mut()
     }
 }
 

@@ -4,7 +4,6 @@ use byteorder::LittleEndian;
 #[cfg(feature = "writer")]
 use serde::{Deserialize, Serialize};
 
-use super::cursor::Cursor;
 use super::helpers::{read_var_int, read_var_int_marker};
 use crate::blockchain::script::BitcoinScript as BScript;
 use crate::blockchain::transactions::Input;
@@ -12,6 +11,7 @@ use crate::blockchain::transactions::Output;
 use crate::blockchain::transactions::Transaction;
 use crate::blockchain::transactions::Utxo;
 use crate::blockchain::transactions::Witness;
+use crate::cursor::Cursor;
 use crate::parser::{TransactionError as TxError, TransactionErrorKind as TxErrorKind};
 use crate::types::BitcoinHash as BHash;
 use crate::types::BitcoinHashBuilder as BHashBuilder;

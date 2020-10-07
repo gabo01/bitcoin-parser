@@ -13,12 +13,11 @@ use crate::parser::Parser;
 use crate::parser::{ParseError, ParseErrorKind};
 
 mod block;
-mod cursor;
 mod helpers;
 mod transaction;
 
+use crate::cursor::Cursor;
 pub use block::SerialBlock;
-use cursor::Cursor;
 pub use transaction::SerialTransaction;
 
 pub const BLOCK_FILE_SIZE: u64 = 128 * 1024 * 1024;

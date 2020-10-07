@@ -3,6 +3,7 @@
 #[cfg(feature = "parser")]
 pub mod blkparser;
 pub mod blockchain;
+pub mod cursor;
 #[cfg(feature = "writer")]
 pub mod disk;
 #[cfg(feature = "parser")]

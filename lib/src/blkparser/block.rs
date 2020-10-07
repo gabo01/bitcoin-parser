@@ -3,12 +3,12 @@ use byteorder::{LittleEndian, ReadBytesExt};
 #[cfg(feature = "writer")]
 use serde::{Deserialize, Serialize};
 
-use super::cursor::Cursor;
 use super::helpers::read_var_int;
 use super::transaction::SerialTransaction;
 use crate::blockchain::block::Block;
 use crate::blockchain::block::BlockHeader;
 use crate::blockchain::block::MiningInfo;
+use crate::cursor::Cursor;
 use crate::parser::{BlockError, BlockErrorKind};
 use crate::parser::{HeaderError, HeaderErrorKind};
 use crate::types::BitcoinHash as BHash;

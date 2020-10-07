@@ -2,7 +2,7 @@ use arrayref::array_ref;
 use byteorder::LittleEndian;
 use std::io;
 
-use super::cursor::Cursor;
+use crate::cursor::Cursor;
 use crate::types::VarInt;
 
 pub fn read_var_int(cursor: &mut Cursor<'_>) -> io::Result<VarInt> {

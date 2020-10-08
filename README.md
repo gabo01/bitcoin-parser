@@ -14,7 +14,7 @@ can be used to develop custom applications.
 In order to compile the library, you will need to have:
 
 - Rust version 1.46.0 or later
-- Cargo verion 1.46.0 or later
+- Cargo version 1.46.0 or later
 
 ### Building from Source
 

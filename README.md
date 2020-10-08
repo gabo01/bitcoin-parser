@@ -1,9 +1,10 @@
 # Bitcoin Parser
 
-[![Lines of code][l1]][l2]
+[![Lines of code][l1]][l2] ![Actions Status][a1]
 
 [l1]: https://tokei.rs/b1/github/gabo01/bitcoin-parser
 [l2]: https://github.com/gabo01/bitcoin-parser
+[a1]: https://github.com/gabo01/bitcoin-parser/workflows/Rust/badge.svg?branch=master
 
 Bitcoin parser is an application and library for performing analysis on the bitcoin blockchain.
 It consists on a CLI used to perform some standard blockchain operations and a library used which

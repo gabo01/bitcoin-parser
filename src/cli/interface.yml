@@ -1,5 +1,5 @@
 name: btparser
-about: btparser is an application for parsing and analysis of data contained in the bitcoin blockchain
+about: btparser is an application for parsing and analysing the data contained in the bitcoin blockchain
 version: "0.1.0"
 author: Gabriel Dos Ramos <dosramosgabriel@gmail.com>
 settings:

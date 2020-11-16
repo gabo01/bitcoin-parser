@@ -1,0 +1,16 @@
+version: '3.2'
+services:
+  bitcoin-core:
+    image: docker.io/ruimarinho/bitcoin-core
+    environment:
+      - BITCOIN_DATA=/var/lib/bitcoin
+    ports:
+      - "8332:8332"
+    command:
+      -disablewallet
+      -rpcuser=gabriel
+      -rpcpassword=gabriel
+      -server
+      -dbcache=3072
+    volumes:
+      - '/mnt/e/bitcoin:/var/lib/bitcoin'
